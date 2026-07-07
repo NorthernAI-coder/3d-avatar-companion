@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>3D Avatar Companion — a walking, talking Three.js avatar for your website</title>
+<meta name="description" content="Drop an animated 3D avatar on any site. It idles in the corner, greets visitors, and detaches into a full-page stroll or platformer playground — your real DOM becomes the level. Open-source Three.js web mascot, @three-ws/walk on npm." />
+<link rel="canonical" href="https://nirholas.github.io/3d-avatar-companion/" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="3D Avatar Companion — a walking, talking Three.js avatar for your website" />
+<meta property="og:description" content="An animated 3D avatar that walks and talks over your web pages. Corner web mascot + full-page stroll/platformer playground. Open source, on npm as @three-ws/walk." />
+<meta property="og:url" content="https://nirholas.github.io/3d-avatar-companion/" />
+<meta name="twitter:card" content="summary" />
+<meta name="theme-color" content="#0b0e16" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9A%B6%3C/text%3E%3C/svg%3E" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "3D Avatar Companion (@three-ws/walk)",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Web",
+  "description": "An animated 3D avatar that walks and talks over your web pages — corner companion plus a full-page stroll/platformer playground. Powered by Three.js.",
+  "url": "https://nirholas.github.io/3d-avatar-companion/",
+  "codeRepository": "https://github.com/nirholas/3d-avatar-companion",
+  "license": "https://www.apache.org/licenses/LICENSE-2.0",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+<style>
+:root{
+  --bg:#0b0e16; --bg-2:#0f1420; --panel:#131a2a; --line:rgba(148,170,220,.16);
+  --text:#e7ecf6; --muted:#96a3bd; --accent:#7aa2ff; --accent-2:#34d399;
+  --code-bg:#0a0f1a; --radius:14px; --max:1080px;
+  --font:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 var(--font);-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+header.site{position:sticky;top:0;z-index:50;background:rgba(11,14,22,.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+header.site .wrap{display:flex;align-items:center;gap:16px;height:60px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;color:var(--text);letter-spacing:.2px}
+.logo:hover{text-decoration:none}
+.logo .glyph{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:linear-gradient(135deg,#7aa2ff33,#34d39933);border:1px solid var(--line);font-size:15px}
+nav.top{margin-left:auto;display:flex;gap:6px}
+nav.top a{color:var(--muted);padding:8px 12px;border-radius:8px;font-size:14px;font-weight:600}
+nav.top a:hover{color:var(--text);background:rgba(122,162,255,.08);text-decoration:none}
+.hero{padding:84px 0 40px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:-40% -20% auto;height:120%;background:
+ radial-gradient(600px 300px at 20% 10%,rgba(122,162,255,.14),transparent 60%),
+ radial-gradient(500px 260px at 80% 0%,rgba(52,211,153,.10),transparent 60%);pointer-events:none}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font:600 13px/1 var(--mono);color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:7px 14px;background:rgba(19,26,42,.6)}
+.eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--accent-2);box-shadow:0 0 10px var(--accent-2)}
+h1{font-size:clamp(2rem,5.4vw,3.4rem);line-height:1.12;letter-spacing:-.02em;margin:22px 0 14px;max-width:17ch}
+h1 em{font-style:normal;background:linear-gradient(90deg,#7aa2ff,#6ee7b7);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{color:var(--muted);font-size:clamp(1.02rem,1.8vw,1.2rem);max-width:56ch;margin:0 0 28px}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:9px;border-radius:10px;padding:12px 20px;font-weight:700;font-size:15px;border:1px solid var(--line);color:var(--text);background:var(--panel);cursor:pointer;transition:transform .15s ease,background .15s ease,border-color .15s ease;font-family:var(--font)}
+.btn:hover{transform:translateY(-1px);border-color:rgba(122,162,255,.5);text-decoration:none}
+.btn:active{transform:translateY(0)}
+.btn.primary{background:linear-gradient(135deg,#5f8bff,#3f6ef0);border-color:transparent;color:#fff;box-shadow:0 8px 24px rgba(63,110,240,.35)}
+.btn.primary:hover{background:linear-gradient(135deg,#6f97ff,#4a78f5)}
+.btn.ghost{background:transparent}
+.hint-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+.chip{font:600 12.5px/1 var(--mono);color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:8px 11px;background:rgba(19,26,42,.5)}
+.chip kbd{font-family:inherit;color:var(--text);background:rgba(122,162,255,.14);border:1px solid rgba(122,162,255,.3);border-radius:5px;padding:2px 6px;margin-right:2px}
+.corner-cue{position:fixed;right:18px;bottom:150px;z-index:40;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--muted);font:600 12.5px/1.3 var(--mono);opacity:0;transition:opacity .6s ease}
+.corner-cue.show{opacity:1}
+.corner-cue .arrow{font-size:22px;animation:cue-bob 1.6s ease-in-out infinite}
+@keyframes cue-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(7px)}}
+@media (prefers-reduced-motion:reduce){.corner-cue .arrow{animation:none}}
+section{padding:56px 0;border-top:1px solid var(--line)}
+h2{font-size:clamp(1.4rem,3vw,1.9rem);letter-spacing:-.01em;margin:0 0 10px}
+.sub{color:var(--muted);max-width:62ch;margin:0 0 30px}
+.grid{display:grid;gap:16px}
+.grid.cols-2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.grid.cols-3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px;transition:border-color .2s ease,transform .2s ease}
+.card:hover{border-color:rgba(122,162,255,.4);transform:translateY(-2px)}
+.card h3{margin:0 0 8px;font-size:1.06rem;display:flex;align-items:center;gap:10px}
+.card p{margin:0;color:var(--muted);font-size:.95rem}
+.card .ico{width:34px;height:34px;flex:none;display:grid;place-items:center;border-radius:9px;background:rgba(122,162,255,.1);border:1px solid var(--line);font-size:16px}
+.steps{counter-reset:step;display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.step{position:relative;background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius);padding:20px 20px 20px 58px}
+.step::before{counter-increment:step;content:counter(step);position:absolute;left:18px;top:20px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:800 13px/1 var(--mono);color:#06231a;background:linear-gradient(135deg,#34d399,#6ee7b7)}
+.step strong{display:block;margin-bottom:4px}
+.step span{color:var(--muted);font-size:.93rem}
+.demo-controls{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px;align-items:center}
+.avatar-chips{display:flex;flex-wrap:wrap;gap:8px}
+.avatar-chips button{font:600 13px/1 var(--font);color:var(--text);background:var(--bg-2);border:1px solid var(--line);border-radius:999px;padding:9px 15px;cursor:pointer;transition:border-color .15s ease,background .15s ease}
+.avatar-chips button:hover{border-color:rgba(52,211,153,.55);background:rgba(52,211,153,.08)}
+.avatar-chips button[aria-pressed="true"]{border-color:var(--accent-2);background:rgba(52,211,153,.14)}
+pre{position:relative;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);padding:20px;overflow-x:auto;font:13.5px/1.6 var(--mono);color:#cdd8ef;margin:0}
+pre .c{color:#5c6b8a}pre .k{color:#7aa2ff}pre .s{color:#6ee7b7}pre .f{color:#f0abfc}
+.copy{position:absolute;top:10px;right:10px;font:600 12px/1 var(--mono);color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:7px 11px;cursor:pointer;transition:color .15s,border-color .15s}
+.copy:hover{color:var(--text);border-color:rgba(122,162,255,.5)}
+.code-stack{display:grid;gap:16px}
+.mode-cards{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.mode{background:linear-gradient(180deg,var(--panel),var(--bg-2));border:1px solid var(--line);border-radius:var(--radius);padding:26px}
+.mode .tag{display:inline-block;font:700 12px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:6px 10px;border-radius:6px;margin-bottom:14px}
+.mode.stroll .tag{color:#0a1f3d;background:linear-gradient(135deg,#7aa2ff,#a5c0ff)}
+.mode.plat .tag{color:#06231a;background:linear-gradient(135deg,#34d399,#6ee7b7)}
+.mode h3{margin:0 0 8px;font-size:1.2rem}
+.mode p{color:var(--muted);margin:0}
+footer{border-top:1px solid var(--line);padding:38px 0 46px;color:var(--muted);font-size:14px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between}
+.sr-status{position:fixed;left:-9999px}
+@media (max-width:560px){ .hero{padding-top:56px} nav.top a.hide-sm{display:none} .corner-cue{bottom:120px;right:10px} }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="logo" href="#top" aria-label="3D Avatar Companion — home">
+      <span class="glyph" aria-hidden="true">🚶</span> 3D&nbsp;Avatar&nbsp;Companion
+    </a>
+    <nav class="top" aria-label="Site">
+      <a href="#try">Try&nbsp;it</a>
+      <a href="#install">Install</a>
+      <a href="#features" class="hide-sm">Features</a>
+      <a href="https://www.npmjs.com/package/@three-ws/walk">npm</a>
+      <a href="https://github.com/nirholas/3d-avatar-companion">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <div class="hero">
+    <div class="wrap">
+      <span class="eyebrow"><span class="dot" aria-hidden="true"></span> live demo — it's walking on this page right now</span>
+      <h1>A 3D avatar that <em>walks and talks</em> over your website</h1>
+      <p class="lede">Drop an animated character onto any site. It idles in the corner, follows the cursor, and greets your visitors — click it and it detaches into a full-page playground where <strong>your real DOM becomes the level</strong>. Powered by Three.js. Free and open source.</p>
+      <div class="cta-row">
+        <button class="btn primary" id="cta-picker" type="button">🎭 Choose who walks with you</button>
+        <a class="btn" href="#install">Install in 60 seconds</a>
+        <a class="btn ghost" href="https://github.com/nirholas/3d-avatar-companion">★ Star on GitHub</a>
+      </div>
+      <div class="hint-chips" aria-label="Controls">
+        <span class="chip"><kbd>click</kbd> the corner avatar → playground</span>
+        <span class="chip"><kbd>WASD</kbd>/<kbd>←→↑↓</kbd> move</span>
+        <span class="chip"><kbd>M</kbd> stroll ⇄ platformer</span>
+        <span class="chip"><kbd>Esc</kbd> exit</span>
+      </div>
+    </div>
+  </div>
+
+  <section id="try">
+    <div class="wrap">
+      <h2>Try it right now</h2>
+      <p class="sub">This page runs the real published package — <code>@three-ws/walk</code> straight off npm, avatars and animation clips streamed from the three.ws CDN. No build step, no screenshots, no video: the product is the demo.</p>
+      <div class="steps">
+        <div class="step"><strong>Find your companion</strong><span>It's idling in the corner of this page, watching your cursor.</span></div>
+        <div class="step"><strong>Click it</strong><span>It detaches into a full-page playground you steer with the keyboard or the on-screen d-pad.</span></div>
+        <div class="step"><strong>Press <code>M</code></strong><span>Gravity on — these headings and cards become solid platforms. Land on a link to dive through it.</span></div>
+      </div>
+      <div class="demo-controls">
+        <button class="btn" id="btn-picker" type="button">🎭 Avatar picker</button>
+        <a class="btn" id="btn-play" href="?walk=play">🕹 Launch playground <span style="opacity:.55;font-weight:600">(?walk=play)</span></a>
+        <div class="avatar-chips" id="avatar-chips" role="group" aria-label="Quick avatar swap">
+          <button type="button" data-avatar="robot">🤖 Robot</button>
+          <button type="button" data-avatar="fox">🦊 Fox</button>
+          <button type="button" data-avatar="michelle">💃 Michelle</button>
+          <button type="button" data-avatar="xbot">🦾 X&nbsp;Bot</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="modes">
+    <div class="wrap">
+      <h2>Two ways to roam</h2>
+      <p class="sub">One key (<code>M</code>) switches the movement model live, and the choice is remembered across pages.</p>
+      <div class="mode-cards">
+        <div class="mode stroll">
+          <span class="tag">Stroll</span>
+          <h3>A gentle aerial wander</h3>
+          <p>Top-down view, no gravity, nothing to fall off. Walk anywhere across the page; step onto a link and it opens like a doorway into the next page.</p>
+        </div>
+        <div class="mode plat">
+          <span class="tag">Platformer</span>
+          <h3>Your DOM is the level</h3>
+          <p>Headings, cards, buttons, and images become solid ground. Gravity, jumping, falling — land on a link to dive in. Every page you ship is a new level.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="install">
+    <div class="wrap">
+      <h2>Install</h2>
+      <p class="sub">From npm with a bundler, or straight into any static page with an import map — exactly how this page does it.</p>
+      <div class="code-stack">
+        <pre><button class="copy" type="button" data-copy="npm install @three-ws/walk three">copy</button><code>npm install @three-ws/walk three</code></pre>
+        <pre><button class="copy" type="button" data-copy='import { createWalkCompanion } from "@three-ws/walk";
+
+createWalkCompanion({
+  assetBase: "https://three.ws",
+  manifestUrl: "https://three.ws/animations/manifest.json",
+}).bootstrap();'>copy</button><code><span class="k">import</span> { <span class="f">createWalkCompanion</span> } <span class="k">from</span> <span class="s">"@three-ws/walk"</span>;
+
+<span class="f">createWalkCompanion</span>({
+  <span class="c">// or host the GLBs + clip manifest yourself</span>
+  assetBase: <span class="s">"https://three.ws"</span>,
+  manifestUrl: <span class="s">"https://three.ws/animations/manifest.json"</span>,
+}).<span class="f">bootstrap</span>();</code></pre>
+        <pre><button class="copy" type="button" data-copy='<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/",
+    "@three-ws/walk": "https://cdn.jsdelivr.net/npm/@three-ws/walk@0.1.2/dist/index.mjs"
+  }
+}
+</script>'>copy</button><code><span class="c">&lt;!-- no bundler? an import map is all you need --&gt;</span>
+&lt;<span class="k">script</span> type=<span class="s">"importmap"</span>&gt;
+{
+  <span class="s">"imports"</span>: {
+    <span class="s">"three"</span>: <span class="s">"https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js"</span>,
+    <span class="s">"three/addons/"</span>: <span class="s">"https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/"</span>,
+    <span class="s">"@three-ws/walk"</span>: <span class="s">"https://cdn.jsdelivr.net/npm/@three-ws/walk@0.1.2/dist/index.mjs"</span>
+  }
+}
+&lt;/<span class="k">script</span>&gt;</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="wrap">
+      <h2>Built like a product, not a gimmick</h2>
+      <p class="sub">This is the engine behind the walking companion on <a href="https://three.ws">three.ws</a> — extracted, documented, and published for any site.</p>
+      <div class="grid cols-3">
+        <div class="card"><h3><span class="ico" aria-hidden="true">🧍</span>Never a T-pose</h3><p>Humanoids with no animations get the shared clip library retargeted onto their skeleton — Mixamo, Ready&nbsp;Player&nbsp;Me, VRM, custom rigs. A rig that can't be driven falls back gracefully. Nothing ever freezes.</p></div>
+        <div class="card"><h3><span class="ico" aria-hidden="true">🎭</span>Built-in roster &amp; picker</h3><p>A dozen avatars out of the box — robots, humanoids, photoreal people, a fox. Add your own GLB with one roster entry. Visitors' choices persist across pages.</p></div>
+        <div class="card"><h3><span class="ico" aria-hidden="true">⚡</span>Lean &amp; lazy</h3><p>Side-effect free on import. The playground loads as its own chunk only on first use. One shared WebGL context budget coordinates with other viewers on your page.</p></div>
+        <div class="card"><h3><span class="ico" aria-hidden="true">♿</span>Accessible by default</h3><p>Respects <code>prefers-reduced-motion</code>, fully keyboard-steerable, visible focus rings, ARIA-labelled controls.</p></div>
+        <div class="card"><h3><span class="ico" aria-hidden="true">🔗</span>URL controls</h3><p><code>?walk=play</code> deep-links straight into the playground; <code>?avatar=fox</code> picks the guest. Great for sharing and QA.</p></div>
+        <div class="card"><h3><span class="ico" aria-hidden="true">📄</span>Apache-2.0</h3><p>Open source, no accounts, no keys. Host the assets yourself or point at the three.ws CDN (CORS is open).</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="byo">
+    <div class="wrap">
+      <h2>Bring your own mascot</h2>
+      <p class="sub">One roster entry turns any GLB into a walking brand character — the retargeting engine handles the animation.</p>
+      <pre><button class="copy" type="button" data-copy='import { createWalkCompanion, WALK_AVATARS } from "@three-ws/walk";
+
+createWalkCompanion({
+  avatars: [
+    ...WALK_AVATARS,
+    {
+      id: "mascot",
+      name: "Our Mascot",
+      category: "Brand",
+      asset: "/brand/mascot.glb",
+      source: "static",
+      rig: "shared",
+      accent: "#ff0066",
+    },
+  ],
+  defaultAvatarId: "mascot",
+}).bootstrap();'>copy</button><code><span class="k">import</span> { <span class="f">createWalkCompanion</span>, WALK_AVATARS } <span class="k">from</span> <span class="s">"@three-ws/walk"</span>;
+
+<span class="f">createWalkCompanion</span>({
+  avatars: [
+    ...WALK_AVATARS,
+    {
+      id: <span class="s">"mascot"</span>,
+      name: <span class="s">"Our Mascot"</span>,
+      category: <span class="s">"Brand"</span>,
+      asset: <span class="s">"/brand/mascot.glb"</span>,
+      source: <span class="s">"static"</span>,
+      rig: <span class="s">"shared"</span>, <span class="c">// retarget the shared clips onto it</span>
+      accent: <span class="s">"#ff0066"</span>,
+    },
+  ],
+  defaultAvatarId: <span class="s">"mascot"</span>,
+}).<span class="f">bootstrap</span>();</code></pre>
+    </div>
+  </section>
+</main>
+
+<div class="corner-cue" id="corner-cue" aria-hidden="true">
+  <span>your companion</span>
+  <span class="arrow">↓</span>
+</div>
+<span class="sr-status" role="status" aria-live="polite" id="live-status"></span>
+
+<footer>
+  <div class="wrap">
+    <span>Apache-2.0 © <a href="https://three.ws">three.ws</a> — the engine behind the companion on three.ws</span>
+    <span>
+      <a href="https://github.com/nirholas/3d-avatar-companion">GitHub</a> ·
+      <a href="https://www.npmjs.com/package/@three-ws/walk">npm</a> ·
+      <a href="https://three.ws/walk">three.ws/walk</a>
+    </span>
+  </div>
+</footer>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/",
+    "@three-ws/walk": "https://cdn.jsdelivr.net/npm/@three-ws/walk@0.1.2/dist/index.mjs"
+  }
+}
+</script>
+<script type="module">
+import { createWalkCompanion } from '@three-ws/walk';
+
+const status = document.getElementById('live-status');
+
+const walk = createWalkCompanion({
+  assetBase: 'https://three.ws',
+  manifestUrl: 'https://three.ws/animations/manifest.json',
+  docsUrl: 'https://github.com/nirholas/3d-avatar-companion',
+});
+walk.bootstrap();                      // honors ?walk= deep links + saved state
+if (!walk.isEnabled()) walk.enable();  // first visit: the demo is the point
+window.walk = walk;                    // play with the API from the console
+
+for (const id of ['cta-picker', 'btn-picker']) {
+  document.getElementById(id)?.addEventListener('click', () => walk.openPicker());
+}
+
+const chips = document.getElementById('avatar-chips');
+chips?.addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-avatar]');
+  if (!btn) return;
+  walk.setAvatar(btn.dataset.avatar);
+  for (const b of chips.querySelectorAll('button')) {
+    b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+  }
+  status.textContent = `Avatar switched to ${btn.textContent.trim()}`;
+});
+
+for (const btn of document.querySelectorAll('.copy')) {
+  btn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(btn.dataset.copy);
+      btn.textContent = 'copied ✓';
+      status.textContent = 'Copied to clipboard';
+    } catch {
+      btn.textContent = 'select & copy';
+    }
+    setTimeout(() => { btn.textContent = 'copy'; }, 1800);
+  });
+}
+
+// Point at the live companion once it has actually mounted, then fade the cue
+// out on first interaction or after a while.
+const cue = document.getElementById('corner-cue');
+const cueTimer = setInterval(() => {
+  if (document.querySelector('canvas')) {
+    cue.classList.add('show');
+    clearInterval(cueTimer);
+    const hide = () => cue.classList.remove('show');
+    setTimeout(hide, 9000);
+    window.addEventListener('pointerdown', hide, { once: true });
+  }
+}, 400);
+setTimeout(() => clearInterval(cueTimer), 20000);
+</script>
+</body>
+</html>
