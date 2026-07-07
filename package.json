@@ -22,10 +22,10 @@
 	"homepage": "https://three.ws/walk",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/niqv/walk-sdk.git"
+		"url": "git+https://github.com/nirholas/3d-avatar-companion.git"
 	},
 	"bugs": {
-		"url": "https://github.com/niqv/walk-sdk/issues"
+		"url": "https://github.com/nirholas/3d-avatar-companion/issues"
 	},
 	"type": "module",
 	"main": "./dist/index.mjs",

@@ -1,6 +1,6 @@
-# @three-ws/walk
+# 3D Avatar Companion — a walking, talking Three.js avatar for your website
 
-> A diverse, animated 3D avatar that **walks and talks over your web pages** — a corner companion plus a full‑page playground, with a built‑in avatar picker. Powered by [Three.js](https://threejs.org).
+> A diverse, animated 3D avatar that **walks and talks over your web pages** — a corner web mascot plus a full‑page stroll/platformer playground, with a built‑in avatar picker. Powered by [Three.js](https://threejs.org). On npm as [`@three-ws/walk`](https://www.npmjs.com/package/@three-ws/walk).
 
 Drop a character onto any site. It idles in the corner, turns to follow the
 cursor, waves when the visitor navigates, and greets each page. Click it and it
