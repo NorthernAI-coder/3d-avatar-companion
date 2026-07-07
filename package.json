@@ -22,11 +22,10 @@
 	"homepage": "https://three.ws/walk",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/nirholas/three.ws.git",
-		"directory": "walk-sdk"
+		"url": "git+https://github.com/niqv/walk-sdk.git"
 	},
 	"bugs": {
-		"url": "https://github.com/nirholas/three.ws/issues"
+		"url": "https://github.com/niqv/walk-sdk/issues"
 	},
 	"type": "module",
 	"main": "./dist/index.mjs",
@@ -57,8 +56,15 @@
 		"test": "node --test test/*.test.mjs",
 		"prepublishOnly": "npm run build"
 	},
+	"dependencies": {
+		"@three-ws/retarget": "^0.1.0"
+	},
 	"peerDependencies": {
 		"three": ">=0.150.0"
+	},
+	"devDependencies": {
+		"esbuild": "^0.28.1",
+		"three": "^0.184.0"
 	},
 	"engines": {
 		"node": ">=18"
