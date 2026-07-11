@@ -9,6 +9,8 @@ or an on‑screen d‑pad — strolling across the page from a gentle aerial vie
 platforming across your real DOM with gravity and jumps. Walk onto a link and
 it opens like a doorway into the next page.
 
+https://github.com/user-attachments/assets/5b3c0b79-726a-48f7-964d-d62ba2a111e8
+
 Every visitor can **choose who walks with them** from a built‑in roster of
 avatars — a robot mascot, humanoids, photoreal people, a fox, dancers,
 showpieces — or you can supply your own GLB. Whatever they pick is animated
