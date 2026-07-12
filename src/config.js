@@ -6,6 +6,7 @@
 // modules it replaces, and an existing visitor's saved state carries over.
 
 import { WALK_AVATARS, DEFAULT_AVATAR_ID, getAvatar, makeApiAvatarEntry } from './roster.js';
+import { loadWalkAvatar } from './internal/load-avatar.js';
 
 // Routes that already own the viewport with their own full-screen 3D, where a
 // corner mascot would be redundant or intrusive.
@@ -57,4 +58,23 @@ export function resolveAvatarEntry(id, config) {
 	const fromRoster = config.avatars.find((a) => a.id === id) || getAvatar(id);
 	if (fromRoster) return fromRoster;
 	return makeApiAvatarEntry(id);
+}
+
+/**
+ * Load an avatar through the shared unified loader, wired to a resolved config.
+ * Accepts an id or a roster entry, resolves the config's default avatar as the
+ * fallback rig, and forwards the config's asset/api/manifest bases — the exact
+ * boilerplate the companion and playground each used to repeat per load/swap.
+ * @returns {Promise<{ model: import('three').Object3D, controller: object, gltf: object, entry: object }>}
+ */
+export function loadConfiguredAvatar(idOrEntry, config) {
+	const entry =
+		typeof idOrEntry === 'string' ? resolveAvatarEntry(idOrEntry, config) : idOrEntry;
+	const fallbackEntry = resolveAvatarEntry(config.defaultAvatarId, config);
+	return loadWalkAvatar(entry, {
+		assetBase: config.assetBase,
+		apiBase: config.apiBase,
+		manifestUrl: config.manifestUrl,
+		fallbackEntry,
+	});
 }

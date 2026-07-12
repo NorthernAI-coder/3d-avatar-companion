@@ -15,7 +15,6 @@
 
 import {
 	AmbientLight,
-	Box3,
 	CircleGeometry,
 	DirectionalLight,
 	DoubleSide,
@@ -32,6 +31,8 @@ import {
 import { reserveWebGLContext, releaseWebGLContext } from './internal/budget.js';
 import { log } from './internal/log.js';
 import {
+	lsGet,
+	lsSet,
 	ssGet,
 	ssSet,
 	ssDel,
@@ -39,9 +40,9 @@ import {
 	webglSupported,
 	clamp,
 } from './internal/storage.js';
-import { loadWalkAvatar } from './internal/load-avatar.js';
+import { disposeObject, scaleModelToHeight, centerModelOnFloor } from './internal/three-utils.js';
 import { createAvatarPicker } from './picker.js';
-import { resolveConfig, resolveAvatarEntry } from './config.js';
+import { resolveConfig, resolveAvatarEntry, loadConfiguredAvatar } from './config.js';
 
 // Active config — set by launchPlayground. Defaults keep the module usable if a
 // caller forgets to pass one (e.g. console-driven `__walkPlayground.launch()`).
@@ -110,18 +111,10 @@ function ensureCheckpointStyles() {
 }
 
 function getMode() {
-	try {
-		return localStorage.getItem(_config.keys.mode) === 'platformer' ? 'platformer' : 'stroll';
-	} catch {
-		return 'stroll';
-	}
+	return lsGet(_config.keys.mode) === 'platformer' ? 'platformer' : 'stroll';
 }
 function setMode(m) {
-	try {
-		localStorage.setItem(_config.keys.mode, m === 'platformer' ? 'platformer' : 'stroll');
-	} catch {
-		/* non-fatal */
-	}
+	lsSet(_config.keys.mode, m === 'platformer' ? 'platformer' : 'stroll');
 }
 
 function docWidth() {
@@ -165,21 +158,6 @@ function pickButtonHTML() {
 	return `<button type="button" class="walk-pg-pick" data-walk-picker-toggle aria-label="Choose your avatar" title="Choose avatar (C)"><span class="walk-pg-pick-ic" aria-hidden="true">🧑</span><span class="walk-pg-pick-tx">Avatar</span></button>`;
 }
 
-// Free a model's GPU resources (geometries, materials, textures) when it leaves
-// the rig after a live avatar swap. Mirrors the per-mesh disposal in teardown.
-function disposeModel(model) {
-	model.traverse((n) => {
-		if (!n.isMesh) return;
-		n.geometry?.dispose?.();
-		const mats = Array.isArray(n.material) ? n.material : [n.material];
-		mats.forEach((m) => {
-			if (!m) return;
-			for (const v of Object.values(m)) if (v && v.isTexture) v.dispose();
-			m.dispose?.();
-		});
-	});
-}
-
 // Open (or toggle) the avatar picker for a running playground. Lazily builds the
 // popover once, then reuses it. Selecting an avatar hot-swaps the live rig.
 function openAvatarPicker(pg) {
@@ -205,23 +183,19 @@ async function swapAvatar(pg, idOrEntry) {
 	if (!entry || !pg.mounted || !pg.rig) return;
 	if (entry.id === pg._avatarId) return;
 	pg._avatarId = entry.id;
-	try {
-		localStorage.setItem(_config.keys.avatar, entry.id);
-	} catch {
-		/* non-fatal — selection still applies for this session */
-	}
+	lsSet(_config.keys.avatar, entry.id);
 	pg._picker?.setCurrent(entry.id);
 	pg._say?.('Switching…', 4000);
 	try {
 		const next = await loadCharacter(entry.id, pg._charPx);
 		if (!pg.mounted || !pg.rig) {
-			disposeModel(next.model);
+			disposeObject(next.model);
 			next.controller?.dispose?.();
 			return;
 		}
 		if (pg.model) {
 			pg.rig.remove(pg.model);
-			disposeModel(pg.model);
+			disposeObject(pg.model);
 		}
 		pg.controller?.dispose?.();
 		pg.rig.add(next.model);
@@ -244,24 +218,10 @@ function destroyPicker(pg) {
 // Load + scale the chosen avatar to a fixed pixel height, feet at the rig
 // origin. Goes through the shared unified loader so any roster avatar animates.
 async function loadCharacter(avatarId, charPx) {
-	const entry = resolveAvatarEntry(avatarId, _config);
-	const fallback = resolveAvatarEntry(_config.defaultAvatarId, _config);
-	const { model, controller } = await loadWalkAvatar(entry, {
-		assetBase: _config.assetBase,
-		apiBase: _config.apiBase,
-		manifestUrl: _config.manifestUrl,
-		fallbackEntry: fallback,
-	});
-	const box = new Box3().setFromObject(model);
-	const size = box.getSize(new Vector3());
-	const scale = charPx / Math.max(0.001, size.y);
-	model.scale.setScalar(scale);
-	const box2 = new Box3().setFromObject(model);
-	const center = box2.getCenter(new Vector3());
-	model.position.x -= center.x;
-	model.position.z -= center.z;
-	model.position.y -= box2.min.y;
-	return { model, controller, halfW: (size.x * scale) / 2 };
+	const { model, controller } = await loadConfiguredAvatar(avatarId, _config);
+	scaleModelToHeight(model, charPx);
+	const size = centerModelOnFloor(model);
+	return { model, controller, halfW: size.x / 2 };
 }
 
 // Deflection past which a stick axis counts as a held direction. High enough
@@ -1443,19 +1403,7 @@ function teardownScene(pg) {
 		/* non-fatal */
 	}
 	pg.controller = null;
-	if (pg.scene) {
-		pg.scene.traverse((n) => {
-			if (n.isMesh) {
-				n.geometry?.dispose?.();
-				const mats = Array.isArray(n.material) ? n.material : [n.material];
-				mats.forEach((m) => {
-					if (!m) return;
-					for (const v of Object.values(m)) if (v && v.isTexture) v.dispose();
-					m.dispose?.();
-				});
-			}
-		});
-	}
+	if (pg.scene) disposeObject(pg.scene);
 	pg.scene = null;
 	if (pg.renderer) {
 		pg.renderer.dispose();
