@@ -20,6 +20,7 @@ import { getMeshoptDecoder } from './meshopt.js';
 import { AnimationManager } from './runtime.js';
 import { resolveClipUrls } from './manifest.js';
 import { log } from './log.js';
+import { disposeObject } from './three-utils.js';
 import { resolveAvatarUrl, DEFAULT_SHARED_CLIPS } from '../roster.js';
 
 const DEFAULT_WAVE_MS = 1500;
@@ -114,38 +115,23 @@ export async function loadWalkAvatar(entry, opts = {}) {
 				log.warn(
 					`avatar "${active.id}" can't be animated (non-humanoid rig, no baked clips) — falling back to "${fallbackEntry.id}"`,
 				);
-				disposeModel(model);
+				disposeObject(model);
 				// Recurse once into the default rig; clear fallbackEntry so a broken
 				// default can't loop. The default (robot) is an embedded rig anyway.
 				return loadWalkAvatar(fallbackEntry, { ...opts, fallbackEntry: null });
 			} else {
-				disposeModel(model);
+				disposeObject(model);
 				throw err;
 			}
 		} else {
 			// Controller build failed after the GLB parsed — free the scene's GPU
 			// resources so a failed avatar load doesn't leak meshes/textures.
-			disposeModel(model);
+			disposeObject(model);
 			throw err;
 		}
 	}
 
 	return { model, controller, gltf, entry: active };
-}
-
-// Release a parsed GLB scene's GPU resources (geometries, materials, textures)
-// when a load is abandoned mid-way so a failed avatar build leaks nothing.
-function disposeModel(model) {
-	model.traverse((n) => {
-		if (!n.isMesh) return;
-		n.geometry?.dispose?.();
-		const mats = Array.isArray(n.material) ? n.material : [n.material];
-		for (const m of mats) {
-			if (!m) continue;
-			for (const v of Object.values(m)) if (v && v.isTexture) v.dispose();
-			m.dispose?.();
-		}
-	});
 }
 
 // ── Embedded-clip controller (rig: 'embedded') ───────────────────────────────

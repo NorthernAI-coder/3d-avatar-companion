@@ -12,14 +12,12 @@
 
 import {
 	AmbientLight,
-	Box3,
 	Timer,
 	DirectionalLight,
 	Group,
 	HemisphereLight,
 	PerspectiveCamera,
 	Scene,
-	Vector3,
 	WebGLRenderer,
 } from 'three';
 import { reserveWebGLContext, releaseWebGLContext } from './internal/budget.js';
@@ -34,9 +32,9 @@ import {
 	webglSupported,
 	clamp,
 } from './internal/storage.js';
-import { loadWalkAvatar } from './internal/load-avatar.js';
+import { disposeObject, centerModelOnFloor } from './internal/three-utils.js';
 import { createAvatarPicker } from './picker.js';
-import { resolveConfig, resolveAvatarEntry } from './config.js';
+import { resolveConfig, resolveAvatarEntry, loadConfiguredAvatar } from './config.js';
 
 const CANVAS_W = 200;
 const CANVAS_H = 280;
@@ -239,17 +237,7 @@ class WalkCompanion {
 	}
 
 	async _loadInto(entry) {
-		const fallback = resolveAvatarEntry(this.config.defaultAvatarId, this.config);
-		const {
-			model,
-			controller,
-			entry: active,
-		} = await loadWalkAvatar(entry, {
-			assetBase: this.config.assetBase,
-			apiBase: this.config.apiBase,
-			manifestUrl: this.config.manifestUrl,
-			fallbackEntry: fallback,
-		});
+		const { model, controller, entry: active } = await loadConfiguredAvatar(entry, this.config);
 		this.model = model;
 		this.controller = controller;
 		this._currentEntry = active;
@@ -258,12 +246,7 @@ class WalkCompanion {
 
 	// Center on X/Z, drop feet to the floor, frame the camera on the full body.
 	_frame(model, rig, camera) {
-		const box = new Box3().setFromObject(model);
-		const size = box.getSize(new Vector3());
-		const center = box.getCenter(new Vector3());
-		model.position.x -= center.x;
-		model.position.z -= center.z;
-		model.position.y -= box.min.y;
+		const size = centerModelOnFloor(model);
 		rig.add(model);
 
 		const height = Math.max(0.6, size.y);
@@ -282,17 +265,7 @@ class WalkCompanion {
 		if (!this.mounted || !this.rig) return; // will apply on next mount
 		this._say('Switching…');
 		try {
-			const fallback = resolveAvatarEntry(this.config.defaultAvatarId, this.config);
-			const {
-				model,
-				controller,
-				entry: active,
-			} = await loadWalkAvatar(entry, {
-				assetBase: this.config.assetBase,
-				apiBase: this.config.apiBase,
-				manifestUrl: this.config.manifestUrl,
-				fallbackEntry: fallback,
-			});
+			const { model, controller, entry: active } = await loadConfiguredAvatar(entry, this.config);
 			if (!this.mounted) {
 				disposeObject(model);
 				controller.dispose?.();
@@ -340,11 +313,7 @@ class WalkCompanion {
 		}
 		this.controller = null;
 		this.model = null;
-		if (this.scene) {
-			this.scene.traverse((n) => {
-				if (n.isMesh) disposeMesh(n);
-			});
-		}
+		if (this.scene) disposeObject(this.scene);
 		this.scene = null;
 		if (this.renderer) {
 			this.renderer.dispose();
@@ -506,22 +475,6 @@ class WalkCompanion {
 		this.renderer.render(this.scene, this.camera);
 		this._raf = requestAnimationFrame(this._tick);
 	}
-}
-
-// ── Shared disposal helpers ───────────────────────────────────────────────────
-function disposeMesh(n) {
-	n.geometry?.dispose?.();
-	const mats = Array.isArray(n.material) ? n.material : [n.material];
-	mats.forEach((m) => {
-		if (!m) return;
-		for (const v of Object.values(m)) if (v && v.isTexture) v.dispose();
-		m.dispose?.();
-	});
-}
-function disposeObject(obj) {
-	obj?.traverse?.((n) => {
-		if (n.isMesh) disposeMesh(n);
-	});
 }
 
 // ── Scoped styles (injected once) ─────────────────────────────────────────────
