@@ -277,6 +277,7 @@ class WalkCompanion {
 		const entry =
 			typeof idOrEntry === 'string' ? resolveAvatarEntry(idOrEntry, this.config) : idOrEntry;
 		if (!entry) return;
+		const prevEntry = this._currentEntry;
 		lsSet(this.config.keys.avatar, entry.id);
 		this._picker?.setCurrent(entry.id);
 		if (!this.mounted || !this.rig) return; // will apply on next mount
@@ -314,6 +315,12 @@ class WalkCompanion {
 		} catch (err) {
 			log.warn('avatar swap failed:', err?.message || err);
 			this._say('Couldn’t load that one — try another.');
+			// The old rig is still on screen — roll the persisted selection back to it
+			// so a reload doesn't reopen on the avatar that just failed to load.
+			if (prevEntry) {
+				lsSet(this.config.keys.avatar, prevEntry.id);
+				this._picker?.setCurrent(prevEntry.id);
+			}
 		}
 	}
 
@@ -335,8 +342,9 @@ class WalkCompanion {
 	_teardownScene() {
 		try {
 			this.controller?.dispose();
-		} catch {
-			/* non-fatal */
+		} catch (err) {
+			// Non-fatal, but a throwing dispose can leak GPU resources — surface it.
+			log.warn('companion controller dispose failed:', err?.message || err);
 		}
 		this.controller = null;
 		this.model = null;
@@ -575,8 +583,8 @@ export function createWalkCompanion(opts = {}) {
 			window.dispatchEvent(
 				new CustomEvent('walk-companion:change', { detail: { enabled: isEnabled() } }),
 			);
-		} catch {
-			/* non-fatal */
+		} catch (err) {
+			log.debug('walk-companion:change dispatch failed:', err?.message || err);
 		}
 	}
 
@@ -684,9 +692,15 @@ export function createWalkCompanion(opts = {}) {
 						control.enable();
 					});
 			} else if (walk === '1' || isEnabled()) {
-				control._tryDropIn().then((dropped) => {
-					if (!dropped) control.enable();
-				});
+				control
+					._tryDropIn()
+					.then((dropped) => {
+						if (!dropped) control.enable();
+					})
+					.catch((err) => {
+						log.warn('companion bootstrap failed:', err?.message || err);
+						control.enable();
+					});
 			}
 		},
 	};

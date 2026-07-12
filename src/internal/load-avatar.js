@@ -292,7 +292,10 @@ async function buildSharedController(model, clips, { manifestUrl, waveMs }) {
 
 	let base = 'idle';
 	let waveTimer = null;
-	const fade = (name, dur) => Promise.resolve(manager.crossfadeTo(name, dur)).catch(() => {});
+	const fade = (name, dur) =>
+		Promise.resolve(manager.crossfadeTo(name, dur)).catch((err) =>
+			log.debug(`crossfade to "${name}" failed:`, err?.message || err),
+		);
 	const clipFor = (state) => resolved[state] || resolved.idle;
 	fade(resolved.idle, 0);
 

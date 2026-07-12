@@ -204,6 +204,7 @@ async function swapAvatar(pg, idOrEntry) {
 		typeof idOrEntry === 'string' ? resolveAvatarEntry(idOrEntry, _config) : idOrEntry;
 	if (!entry || !pg.mounted || !pg.rig) return;
 	if (entry.id === pg._avatarId) return;
+	const prevId = pg._avatarId;
 	pg._avatarId = entry.id;
 	try {
 		localStorage.setItem(_config.keys.avatar, entry.id);
@@ -233,6 +234,17 @@ async function swapAvatar(pg, idOrEntry) {
 	} catch (err) {
 		log.warn('avatar swap failed:', err?.message || err);
 		pg._say?.('Couldn’t load that one — try another.');
+		// The previous rig is still live — roll state back to it so a mode switch or
+		// reload doesn't reopen on the avatar that just failed to load.
+		pg._avatarId = prevId;
+		if (prevId) {
+			try {
+				localStorage.setItem(_config.keys.avatar, prevId);
+			} catch {
+				/* non-fatal */
+			}
+			pg._picker?.setCurrent(prevId);
+		}
 	}
 }
 
@@ -1439,8 +1451,9 @@ class PlatformerPlayground {
 function teardownScene(pg) {
 	try {
 		pg.controller?.dispose();
-	} catch {
-		/* non-fatal */
+	} catch (err) {
+		// Non-fatal, but a throwing dispose can leak GPU resources — surface it.
+		log.warn('playground controller dispose failed:', err?.message || err);
 	}
 	pg.controller = null;
 	if (pg.scene) {
@@ -1537,8 +1550,8 @@ export function exitPlayground() {
 	}
 	try {
 		window.dispatchEvent(new CustomEvent('walk-playground:exit'));
-	} catch {
-		/* non-fatal */
+	} catch (err) {
+		log.debug('walk-playground:exit dispatch failed:', err?.message || err);
 	}
 }
 
