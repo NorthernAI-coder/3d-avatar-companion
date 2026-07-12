@@ -37,6 +37,7 @@ import {
 import { loadWalkAvatar } from './internal/load-avatar.js';
 import { createAvatarPicker } from './picker.js';
 import { resolveConfig, resolveAvatarEntry } from './config.js';
+import { normalizeAvatarId } from './internal/safety.js';
 
 const CANVAS_W = 200;
 const CANVAS_H = 280;
@@ -229,10 +230,11 @@ class WalkCompanion {
 	}
 
 	_resolveEntry() {
-		const param =
+		const param = normalizeAvatarId(
 			typeof location !== 'undefined'
 				? new URLSearchParams(location.search).get('avatar')
-				: null;
+				: null,
+		);
 		if (param) lsSet(this.config.keys.avatar, param);
 		const id = param || lsGet(this.config.keys.avatar) || this.config.defaultAvatarId;
 		return resolveAvatarEntry(id, this.config);

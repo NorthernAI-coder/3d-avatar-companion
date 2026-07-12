@@ -7,6 +7,7 @@
 // itself (persistence is the host's job).
 
 import { isCoarsePointer } from './internal/storage.js';
+import { isSafeCssColor, resolveSafeHttpUrl } from './internal/safety.js';
 
 let _stylesInjected = false;
 function ensureStyles() {
@@ -85,12 +86,23 @@ export function createAvatarPicker(opts) {
 			<input type="search" placeholder="Search avatars…" aria-label="Search avatars" />
 		</label>
 		<div class="walk-picker-list" role="listbox" aria-label="Avatars"></div>
-		${docsUrl ? `<div class="walk-picker-foot"><span>${avatars.length} avatars</span><a href="${docsUrl}">Make your own →</a></div>` : ''}
 	`;
 
 	const listEl = root.querySelector('.walk-picker-list');
 	const inputEl = root.querySelector('.walk-picker-search input');
 	const closeBtn = root.querySelector('.walk-picker-close');
+	const safeDocsUrl = resolveSafeHttpUrl(docsUrl, document.baseURI);
+	if (safeDocsUrl) {
+		const footer = document.createElement('div');
+		footer.className = 'walk-picker-foot';
+		const count = document.createElement('span');
+		count.textContent = `${avatars.length} avatars`;
+		const link = document.createElement('a');
+		link.href = safeDocsUrl;
+		link.textContent = 'Make your own →';
+		footer.append(count, link);
+		root.appendChild(footer);
+	}
 
 	function tileFor(entry) {
 		const btn = document.createElement('button');
@@ -100,11 +112,15 @@ export function createAvatarPicker(opts) {
 		btn.setAttribute('aria-selected', String(entry.id === currentId));
 		btn.dataset.id = entry.id;
 		btn.title = entry.blurb || entry.name;
-		if (entry.accent) btn.style.setProperty('--wp-accent', entry.accent);
-		const orbStyle = entry.thumb
-			? ` style="background-image:url('${assetBase}${entry.thumb}')"`
-			: '';
-		btn.innerHTML = `<span class="walk-picker-orb"${orbStyle}>${entry.thumb ? '' : entry.emoji || '🧍'}</span>`;
+		if (isSafeCssColor(entry.accent)) btn.style.setProperty('--wp-accent', entry.accent);
+		const orb = document.createElement('span');
+		orb.className = 'walk-picker-orb';
+		const thumbUrl = entry.thumb
+			? resolveSafeHttpUrl(`${assetBase}${entry.thumb}`, document.baseURI)
+			: null;
+		if (thumbUrl) orb.style.backgroundImage = `url("${thumbUrl}")`;
+		else orb.textContent = entry.emoji || '🧍';
+		btn.appendChild(orb);
 		const nameSpan = document.createElement('span');
 		nameSpan.className = 'walk-picker-name';
 		nameSpan.textContent = entry.name;
