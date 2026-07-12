@@ -20,7 +20,7 @@ test('UI links and images only accept HTTP(S) URLs', () => {
 	assert.equal(resolveSafeHttpUrl('https://cdn.example/avatar.png', BASE), 'https://cdn.example/avatar.png');
 	assert.equal(resolveSafeHttpUrl('javascript:alert(1)', BASE), null);
 	assert.equal(resolveSafeHttpUrl('data:text/html,<script>alert(1)</script>', BASE), null);
-	assert.equal(resolveSafeHttpUrl('not a valid URL%', BASE), null);
+	assert.equal(resolveSafeHttpUrl('http://[::1', BASE), null);
 });
 
 test('avatar accent accepts colors but rejects CSS injection primitives', () => {
