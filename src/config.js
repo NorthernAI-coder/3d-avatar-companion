@@ -6,6 +6,7 @@
 // modules it replaces, and an existing visitor's saved state carries over.
 
 import { WALK_AVATARS, DEFAULT_AVATAR_ID, getAvatar, makeApiAvatarEntry } from './roster.js';
+import { normalizeAvatarId } from './internal/safety.js';
 
 // Routes that already own the viewport with their own full-screen 3D, where a
 // corner mascot would be redundant or intrusive.
@@ -53,8 +54,9 @@ export function resolveConfig(opts = {}) {
  * proxy, so it becomes an on-the-fly API entry.
  */
 export function resolveAvatarEntry(id, config) {
-	if (!id) return getAvatar(config.defaultAvatarId) || config.avatars[0];
-	const fromRoster = config.avatars.find((a) => a.id === id) || getAvatar(id);
+	const normalizedId = normalizeAvatarId(id);
+	if (!normalizedId) return getAvatar(config.defaultAvatarId) || config.avatars[0];
+	const fromRoster = config.avatars.find((a) => a.id === normalizedId) || getAvatar(normalizedId);
 	if (fromRoster) return fromRoster;
-	return makeApiAvatarEntry(id);
+	return makeApiAvatarEntry(normalizedId);
 }
